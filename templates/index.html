@@ -1,0 +1,1885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Container - Bùi Minh Thành</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .container-info { margin-top: 20px; }
+        .log-output { background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 10px; max-height: 300px; overflow-y: auto; }
+        .copyright-footer {
+            margin-top: 50px;
+            padding: 20px 0;
+            border-top: 1px solid #dee2e6;
+            background-color: #f8f9fa;
+            text-align: center;
+            color: #6c757d;
+        }
+        .stat-card {
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .stat-card.success {
+            background: linear-gradient(45deg, #28a745, #1e7e34);
+        }
+        .stat-card.warning {
+            background: linear-gradient(45deg, #ffc107, #e0a800);
+        }
+        .stat-card.danger {
+            background: linear-gradient(45deg, #dc3545, #c82333);
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">
+            Quản lý Docker Container
+            <small class="text-muted d-block fs-6 mt-2">Docker Container Management System</small>
+        </h1>
+        
+        <!-- Server Status -->
+        <div class="alert alert-info d-flex align-items-center" id="serverStatus">
+            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+            <span>Đang kiểm tra kết nối server...</span>
+        </div>
+
+        <!-- Dashboard Statistics -->
+        <div class="row container-info">
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">Total Containers</h6>
+                            <h3 class="mb-0" id="totalContainers">0</h3>
+                        </div>
+                        <div class="fs-1">🐳</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card success">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">Running</h6>
+                            <h3 class="mb-0" id="runningContainers">0</h3>
+                        </div>
+                        <div class="fs-1">🚀</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card warning">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">Stopped</h6>
+                            <h3 class="mb-0" id="stoppedContainers">0</h3>
+                        </div>
+                        <div class="fs-1">⏸️</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card danger">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">Images</h6>
+                            <h3 class="mb-0" id="totalImages">0</h3>
+                        </div>
+                        <div class="fs-1">💿</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Resource Statistics -->
+        <div class="row container-info">
+            <div class="col-md-4">
+                <div class="stat-card" style="background: linear-gradient(45deg, #17a2b8, #138496);">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">Memory Usage</h6>
+                            <h3 class="mb-0" id="memoryPercent">0%</h3>
+                            <small id="memoryDetails">0 / 0 GB</small>
+                        </div>
+                        <div class="fs-1">🧠</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card" style="background: linear-gradient(45deg, #6f42c1, #59359a);">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">Disk Usage</h6>
+                            <h3 class="mb-0" id="diskPercent">0%</h3>
+                            <small id="diskDetails">0 / 0 GB</small>
+                        </div>
+                        <div class="fs-1">💾</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card" style="background: linear-gradient(45deg, #fd7e14, #e55a00);">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">CPU Cores</h6>
+                            <h3 class="mb-0" id="cpuCores">0</h3>
+                            <small>Available Cores</small>
+                        </div>
+                        <div class="fs-1">⚡</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Dashboard -->
+        <div class="row container-info">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>📊 Container Status</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="containerStatusChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>🧠 Memory Usage</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="memoryChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>💾 Disk Usage</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="diskChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Images Chart -->
+        <div class="row container-info">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>📈 Images by Repository</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="imageRepositoryChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Container Operations -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Quản lý Container</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <button type="button" class="btn btn-primary btn-lg" onclick="showCreateContainerModal()">
+                            🐳 Tạo Container mới
+                        </button>
+                        <p class="mt-2 text-muted">Click để mở form tạo container hoặc sử dụng nút "🐳" từ danh sách images</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Results Display -->
+        <div class="container-info">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Kết quả</h5>
+                </div>
+                <div class="card-body">
+                    <div id="result" class="log-output">
+                        <p class="text-muted">Kết quả sẽ hiển thị tại đây...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Image Management -->
+        <div class="row container-info">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Tìm kiếm & Pull Images</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="imageForm">
+                            <div class="mb-3">
+                                <label for="searchImageInput" class="form-label">Tìm kiếm Image:</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="searchImageInput" placeholder="nginx, mysql, ubuntu...">
+                                    <button type="button" class="btn btn-outline-secondary" onclick="searchImages()">
+                                        <i class="bi bi-search"></i> Tìm kiếm
+                                    </button>
+                                </div>
+                                <div class="form-text">Tìm kiếm images từ Docker Hub</div>
+                            </div>
+                            
+                            <!-- Search Results -->
+                            <div id="searchResults" class="mb-3" style="display: none;">
+                                <label class="form-label">Kết quả tìm kiếm:</label>
+                                <div id="searchResultsList" class="border rounded p-2" style="max-height: 200px; overflow-y: auto;">
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="imageNameInput" class="form-label">Tên Image đã chọn:</label>
+                                <input type="text" class="form-control" id="imageNameInput" placeholder="nginx, ubuntu, etc." readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label for="imageTag" class="form-label">Tag:</label>
+                                <input type="text" class="form-control" id="imageTag" placeholder="latest, 20.04, etc." value="latest">
+                            </div>
+                            <div class="d-grid gap-2">
+                                <button type="button" class="btn btn-primary" onclick="pullImage()">Pull Image</button>
+                                <button type="button" class="btn btn-info" onclick="listImages()">Liệt kê Images</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Xóa Image</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="removeImageForm">
+                            <div class="mb-3">
+                                <label for="removeImageName" class="form-label">Tên hoặc ID Image:</label>
+                                <input type="text" class="form-control" id="removeImageName" placeholder="nginx:latest hoặc image ID">
+                            </div>
+                            <div class="d-grid">
+                                <button type="button" class="btn btn-danger" onclick="removeImage()">Xóa Image</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Image List -->
+        <div class="container-info">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Danh sách Images</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="imageTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Repository</th>
+                                    <th>Tag</th>
+                                    <th>Size</th>
+                                    <th>Created</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="imageTableBody">
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">Chưa có dữ liệu</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Container List -->
+        <div class="container-info">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Danh sách Container</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="containerTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Tên</th>
+                                    <th>Image</th>
+                                    <th>Trạng thái</th>
+                                    <th>Port</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="containerTableBody">
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">Chưa có dữ liệu</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Container Management Modal -->
+        <div class="modal fade" id="containerModal" tabindex="-1" aria-labelledby="containerModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="containerModalLabel">Tạo Container mới</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="modalCreateForm">
+                            <div class="mb-3">
+                                <label for="modalImageName" class="form-label">Image:</label>
+                                <input type="text" class="form-control" id="modalImageName" placeholder="nginx:latest">
+                                <div class="form-text">Nhập tên image (ví dụ: nginx:latest, ubuntu:20.04)</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="modalContainerName" class="form-label">Tên Container:</label>
+                                <input type="text" class="form-control" id="modalContainerName" placeholder="Nhập tên container">
+                            </div>
+                            <div class="mb-3">
+                                <label for="modalPortMapping" class="form-label">Port Mapping (tùy chọn):</label>
+                                <input type="text" class="form-control" id="modalPortMapping" placeholder="8080:80">
+                                <div class="form-text">Để trống nếu không cần port mapping</div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="button" class="btn btn-primary" onclick="createContainerFromModal()">🚀 Tạo Container</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Container Action Modal -->
+        <div class="modal fade" id="containerActionModal" tabindex="-1" aria-labelledby="containerActionModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="containerActionModalLabel">Thao tác Container</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Container:</label>
+                            <div class="d-flex align-items-center">
+                                <span class="font-monospace small bg-light p-2 rounded me-2" id="actionContainerInfo"></span>
+                            </div>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="button" class="btn btn-success" id="startContainerBtn" onclick="performContainerAction('start')">
+                                🚀 Khởi động Container
+                            </button>
+                            <button type="button" class="btn btn-warning" id="stopContainerBtn" onclick="performContainerAction('stop')">
+                                ⏸️ Dừng Container
+                            </button>
+                            <button type="button" class="btn btn-danger" id="removeContainerBtn" onclick="performContainerAction('remove')">
+                                🗑️ Xóa Container
+                            </button>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Advanced Features -->
+        <div class="row container-info">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>🚀 Advanced Features</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <button type="button" class="btn btn-info w-100 mb-2" onclick="showBulkOperations()">
+                                    📦 Bulk Operations
+                                </button>
+                            </div>
+                            <div class="col-md-3">
+                                <button type="button" class="btn btn-warning w-100 mb-2" onclick="showSystemCleanup()">
+                                    🧹 System Cleanup
+                                </button>
+                            </div>
+                            <div class="col-md-3">
+                                <button type="button" class="btn btn-secondary w-100 mb-2" onclick="showNetworkManager()">
+                                    🌐 Networks
+                                </button>
+                            </div>
+                            <div class="col-md-3">
+                                <button type="button" class="btn btn-dark w-100 mb-2" onclick="showVolumeManager()">
+                                    💾 Volumes
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bulk Operations Modal -->
+        <div class="modal fade" id="bulkModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">📦 Bulk Container Operations</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Quick Selection Buttons -->
+                        <div class="mb-3">
+                            <label class="form-label">Quick Selection:</label>
+                            <div class="btn-group w-100" role="group">
+                                <button type="button" class="btn btn-outline-primary" onclick="selectAllContainers()">
+                                    ✅ All
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="selectNoneContainers()">
+                                    ❌ None
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Action Selection -->
+                        <div class="mb-3">
+                            <label class="form-label">Select Action:</label>
+                            <select class="form-select" id="bulkAction">
+                                <option value="start">🚀 Start All Selected</option>
+                                <option value="stop">⏸️ Stop All Selected</option>
+                                <option value="restart">🔄 Restart All Selected</option>
+                                <option value="remove">🗑️ Remove All Selected</option>
+                            </select>
+                            <div class="form-text">
+                                <strong>Chú ý:</strong> 
+                                • Start: Khởi động containers đã chọn<br>
+                                • Stop: Dừng containers đang chạy<br>
+                                • Restart: Khởi động lại containers<br>
+                                • Remove: Xóa hoàn toàn containers (không thể hoàn tác)
+                            </div>
+                        </div>
+
+                        <!-- Selected Containers List -->
+                        <div class="mb-3">
+                            <label class="form-label">Selected Containers:</label>
+                            <div id="bulkContainerList" class="border rounded p-3" style="max-height: 200px; overflow-y: auto;">
+                                <p class="text-muted">Chưa chọn container nào. Hãy chọn container từ bảng trên hoặc dùng Quick Selection.</p>
+                            </div>
+                        </div>
+
+                        <!-- Progress Info -->
+                        <div class="alert alert-info">
+                            <h6>💡 Hướng dẫn sử dụng:</h6>
+                            <ol class="mb-0">
+                                <li>Sử dụng Quick Selection buttons hoặc đóng modal để chọn containers từ bảng</li>
+                                <li>Chọn action muốn thực hiện</li>
+                                <li>Click Execute để thực thi</li>
+                                <li>Kiểm tra kết quả trong phần "Kết quả"</li>
+                            </ol>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            ❌ Cancel
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="executeBulkOperation()">
+                            ⚡ Execute Operation
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Container Logs Modal -->
+        <div class="modal fade" id="logsModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">📋 Container Logs</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Tail Lines:</label>
+                            <select class="form-select" id="logTailLines" onchange="refreshLogs()">
+                                <option value="50">50 lines</option>
+                                <option value="100" selected>100 lines</option>
+                                <option value="200">200 lines</option>
+                                <option value="500">500 lines</option>
+                            </select>
+                        </div>
+                        <div class="log-output" id="containerLogs" style="height: 400px; background: #2d3748; color: #e2e8f0; font-family: monospace; white-space: pre-wrap;">
+                            Loading logs...
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-info" onclick="refreshLogs()">🔄 Refresh</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Container Terminal Modal -->
+        <div class="modal fade" id="terminalModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">💻 Container Terminal</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Command:</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="text" class="form-control" id="terminalCommand" placeholder="ls -la" onkeypress="handleTerminalEnter(event)">
+                                <button class="btn btn-primary" onclick="executeCommand()">Execute</button>
+                            </div>
+                        </div>
+                        <div class="log-output" id="terminalOutput" style="height: 300px; background: #1a202c; color: #68d391; font-family: monospace; white-space: pre-wrap;">
+                            Terminal ready. Enter a command above.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Copyright Footer -->
+    <footer class="copyright-footer mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <p class="mb-1">
+                        <strong>Docker Container Management System</strong>
+                    </p>
+                    <p class="mb-1">
+                        © 2025 <strong>Bùi Minh Thành</strong>. All rights reserved.
+                    </p>
+                    <p class="mb-0 small">
+                        Developed with ❤️ using Go + Gin + Bootstrap | Version 1.0
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Docker Container Management System
+        // Copyright (c) 2025 Bùi Minh Thành - All rights reserved
+        
+        let serverConnected = false;
+        let containerStatusChart = null;
+        let imageRepositoryChart = null;
+        let memoryChart = null;
+        let diskChart = null;
+        let currentContainerForLogs = null;
+        let currentContainerForTerminal = null;
+        
+        // Initialize charts
+        function initializeCharts() {
+            // Container Status Chart
+            const ctxContainer = document.getElementById('containerStatusChart').getContext('2d');
+            containerStatusChart = new Chart(ctxContainer, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Running', 'Stopped', 'Paused'],
+                    datasets: [{
+                        data: [0, 0, 0],
+                        backgroundColor: [
+                            '#28a745',
+                            '#ffc107', 
+                            '#6c757d'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Container Status'
+                        }
+                    }
+                }
+            });
+
+            // Memory Usage Chart
+            const ctxMemory = document.getElementById('memoryChart').getContext('2d');
+            memoryChart = new Chart(ctxMemory, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Used', 'Free'],
+                    datasets: [{
+                        data: [0, 100],
+                        backgroundColor: [
+                            '#17a2b8',
+                            '#e9ecef'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Memory Usage'
+                        }
+                    }
+                }
+            });
+
+            // Disk Usage Chart
+            const ctxDisk = document.getElementById('diskChart').getContext('2d');
+            diskChart = new Chart(ctxDisk, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Used', 'Free'],
+                    datasets: [{
+                        data: [0, 100],
+                        backgroundColor: [
+                            '#6f42c1',
+                            '#e9ecef'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Disk Usage'
+                        }
+                    }
+                }
+            });
+
+            // Image Repository Chart
+            const ctxImage = document.getElementById('imageRepositoryChart').getContext('2d');
+            imageRepositoryChart = new Chart(ctxImage, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Images Count',
+                        data: [],
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Images by Repository'
+                        }
+                    }
+                }
+            });
+        }
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function updateDashboardStats(containers, images, systemInfo) {
+            // Update container statistics
+            const total = containers ? containers.length : 0;
+            const running = containers ? containers.filter(c => c.State === 'running').length : 0;
+            const stopped = containers ? containers.filter(c => c.State === 'exited' || c.State === 'created' || c.State === 'dead' || c.State === 'restarting').length : 0;
+            const paused = containers ? containers.filter(c => c.State === 'paused').length : 0;
+            const totalImg = images ? images.length : 0;
+
+            // Update stat cards
+            document.getElementById('totalContainers').textContent = total;
+            document.getElementById('runningContainers').textContent = running;
+            document.getElementById('stoppedContainers').textContent = stopped;
+            document.getElementById('totalImages').textContent = totalImg;
+
+            // Update system stats if available
+            if (systemInfo && systemInfo.memory) {
+                const memPercent = systemInfo.memory.percent.toFixed(1);
+                const memUsed = formatBytes(systemInfo.memory.used);
+                const memTotal = formatBytes(systemInfo.memory.total);
+                
+                document.getElementById('memoryPercent').textContent = memPercent + '%';
+                document.getElementById('memoryDetails').textContent = `${memUsed} / ${memTotal}`;
+
+                // Update memory chart
+                if (memoryChart) {
+                    memoryChart.data.datasets[0].data = [systemInfo.memory.percent, 100 - systemInfo.memory.percent];
+                    memoryChart.update();
+                }
+            }
+
+            if (systemInfo && systemInfo.disk) {
+                const diskPercent = systemInfo.disk.percent.toFixed(1);
+                const diskUsed = formatBytes(systemInfo.disk.used);
+                const diskTotal = formatBytes(systemInfo.disk.total);
+                
+                document.getElementById('diskPercent').textContent = diskPercent + '%';
+                document.getElementById('diskDetails').textContent = `${diskUsed} / ${diskTotal}`;
+
+                // Update disk chart
+                if (diskChart) {
+                    diskChart.data.datasets[0].data = [systemInfo.disk.percent, 100 - systemInfo.disk.percent];
+                    diskChart.update();
+                }
+            }
+
+            if (systemInfo && systemInfo.cpu) {
+                document.getElementById('cpuCores').textContent = systemInfo.cpu.cores;
+            }
+
+            // Update container status chart
+            if (containerStatusChart) {
+                containerStatusChart.data.datasets[0].data = [running, stopped, paused];
+                containerStatusChart.update();
+            }
+
+            // Update image repository chart
+            if (imageRepositoryChart && images) {
+                const repoCount = {};
+                images.forEach(img => {
+                    if (img.RepoTags && img.RepoTags.length > 0) {
+                        img.RepoTags.forEach(tag => {
+                            if (tag !== '<none>:<none>') {
+                                const repo = tag.split(':')[0];
+                                repoCount[repo] = (repoCount[repo] || 0) + 1;
+                            }
+                        });
+                    }
+                });
+
+                const sortedRepos = Object.entries(repoCount)
+                    .sort(([,a], [,b]) => b - a)
+                    .slice(0, 10); // Top 10 repositories
+
+                imageRepositoryChart.data.labels = sortedRepos.map(([repo]) => repo);
+                imageRepositoryChart.data.datasets[0].data = sortedRepos.map(([,count]) => count);
+                imageRepositoryChart.update();
+            }
+        }
+
+        function updateServerStatus(connected, message = '') {
+            const statusDiv = document.getElementById('serverStatus');
+            serverConnected = connected;
+            
+            if (connected) {
+                statusDiv.className = 'alert alert-success d-flex align-items-center';
+                statusDiv.innerHTML = '<i class="bi bi-check-circle me-2"></i><span>Server đã kết nối - Sẵn sàng sử dụng</span>';
+            } else {
+                statusDiv.className = 'alert alert-danger d-flex align-items-center';
+                statusDiv.innerHTML = `<i class="bi bi-exclamation-triangle me-2"></i><span>Không thể kết nối server: ${message}</span>`;
+            }
+        }
+        
+        function setLoading(isLoading) {
+            const buttons = document.querySelectorAll('button');
+            buttons.forEach(btn => {
+                btn.disabled = isLoading || !serverConnected;
+                if (isLoading && btn.innerHTML.indexOf('spinner') === -1) {
+                    const originalText = btn.textContent;
+                    btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status"></span>${originalText}`;
+                } else if (!isLoading) {
+                    btn.innerHTML = btn.textContent;
+                }
+            });
+        }
+
+        function searchImages() {
+            const searchTerm = document.getElementById('searchImageInput').value.trim();
+            
+            if (!searchTerm) {
+                displayResult({error: 'Vui lòng nhập từ khóa tìm kiếm'});
+                return;
+            }
+            
+            if (!serverConnected) {
+                displayResult({error: 'Server chưa kết nối. Vui lòng kiểm tra server trước khi tìm kiếm.'});
+                return;
+            }
+            
+            setLoading(true);
+            displayResult({message: 'Đang tìm kiếm...'});
+            
+            fetch(`/images/search/${encodeURIComponent(searchTerm)}`)
+                .then(response => {
+                    console.log('Search response status:', response.status); // Debug
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Search API response:', data); // Debug log
+                    const results = data.results || [];
+                    console.log('Extracted results:', results); // Debug log
+                    
+                    if (results.length > 0) {
+                        displaySearchResults(results);
+                        displayResult({message: `Tìm thấy ${results.length} images cho "${searchTerm}". Click vào một kết quả để chọn.`});
+                    } else {
+                        document.getElementById('searchResults').style.display = 'none';
+                        displayResult({message: `Không tìm thấy images nào cho "${searchTerm}"`});
+                    }
+                })
+                .catch(error => {
+                    console.error('Search error:', error); // Debug log
+                    displayResult({error: 'Lỗi tìm kiếm: ' + error.message});
+                    document.getElementById('searchResults').style.display = 'none';
+                })
+                .finally(() => setLoading(false));
+        }
+
+        function displaySearchResults(results) {
+            console.log('Displaying search results:', results); // Debug log
+            const searchResultsDiv = document.getElementById('searchResults');
+            const searchResultsList = document.getElementById('searchResultsList');
+            
+            if (!results || results.length === 0) {
+                console.log('No results to display'); // Debug log
+                searchResultsDiv.style.display = 'none';
+                return;
+            }
+            
+            console.log('Creating HTML for', results.length, 'results'); // Debug log
+            searchResultsDiv.style.display = 'block';
+            
+            const htmlContent = results.map((result, index) => {
+                console.log(`Processing result ${index}:`, result); // Debug each result
+                
+                // Handle different property names and undefined values
+                const name = result.Name || result.name || 'Unknown';
+                const description = (result.Description || result.description || 'Không có mô tả').substring(0, 100);
+                const starCount = result.StarCount || result.star_count || 0;
+                const pullCount = result.PullCount || result.pull_count || 0;
+                const isOfficial = result.IsOfficial || result.is_official || false;
+                
+                return `
+                    <div class="search-result-item p-2 mb-2 border rounded bg-light" 
+                         style="cursor: pointer;" 
+                         onclick="selectImage('${name}')">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1 text-primary">${name}</h6>
+                                <p class="mb-1 small text-muted">${description}${description.length >= 100 ? '...' : ''}</p>
+                                <div class="d-flex gap-3">
+                                    <small class="text-success">
+                                        ⭐ ${starCount} stars
+                                    </small>
+                                    <small class="text-info">
+                                        📥 ${pullCount} pulls
+                                    </small>
+                                    ${isOfficial ? '<small class="text-warning">🏅 Official</small>' : ''}
+                                </div>
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary" 
+                                    onclick="event.stopPropagation(); selectImage('${name}')" 
+                                    type="button">
+                                Chọn
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            console.log('Generated HTML length:', htmlContent.length); // Debug log
+            searchResultsList.innerHTML = htmlContent;
+            
+            // Add hover effects
+            if (!document.getElementById('search-hover-style')) {
+                const style = document.createElement('style');
+                style.id = 'search-hover-style';
+                style.textContent = `
+                    .search-result-item:hover {
+                        background-color: #e3f2fd !important;
+                        border-color: #2196f3 !important;
+                        transform: translateY(-1px);
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+        }
+
+        function selectImage(imageName) {
+            console.log('Selecting image:', imageName); // Debug log
+            
+            if (!imageName || imageName === 'Unknown') {
+                displayResult({error: 'Tên image không hợp lệ'});
+                return;
+            }
+            
+            document.getElementById('imageNameInput').value = imageName;
+            document.getElementById('searchResults').style.display = 'none';
+            displayResult({message: `✅ Đã chọn image: ${imageName}. Bạn có thể thay đổi tag nếu cần, sau đó click "Pull Image".`});
+            
+            // Clear search input
+            document.getElementById('searchImageInput').value = '';
+            
+            // Focus on tag input and highlight it
+            const tagInput = document.getElementById('imageTag');
+            tagInput.focus();
+            tagInput.select();
+        }
+
+        function pullImage() {
+            if (!serverConnected) {
+                displayResult({error: 'Server chưa kết nối. Vui lòng kiểm tra server trước khi pull image.'});
+                return;
+            }
+            
+            const imageName = document.getElementById('imageNameInput').value;
+            const imageTag = document.getElementById('imageTag').value || 'latest';
+            
+            if (!imageName) {
+                displayResult({error: 'Vui lòng chọn image từ kết quả tìm kiếm hoặc nhập tên image'});
+                return;
+            }
+            
+            setLoading(true);
+            
+            const data = {
+                name: imageName,
+                tag: imageTag
+            };
+            
+            fetch('/images/pull', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                displayResult(data);
+                document.getElementById('imageForm').reset();
+                document.getElementById('imageTag').value = 'latest'; // Reset tag to default
+                listImages();
+            })
+            .catch(error => {
+                displayResult({error: 'Lỗi pull image: ' + error.message});
+            })
+            .finally(() => setLoading(false));
+        }
+
+        function removeImage() {
+            if (!serverConnected) {
+                displayResult({error: 'Server chưa kết nối. Vui lòng kiểm tra server trước khi xóa image.'});
+                return;
+            }
+            
+            const imageName = document.getElementById('removeImageName').value;
+            
+            if (!imageName) {
+                displayResult({error: 'Vui lòng nhập tên hoặc ID image'});
+                return;
+            }
+            
+            if (!confirm(`Bạn có chắc chắn muốn xóa image "${imageName}"?`)) {
+                return;
+            }
+            
+            setLoading(true);
+            
+            fetch(`/images/${encodeURIComponent(imageName)}`, {
+                method: 'DELETE'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                displayResult(data);
+                document.getElementById('removeImageForm').reset();
+                listImages();
+            })
+            .catch(error => {
+                displayResult({error: 'Lỗi xóa image: ' + error.message});
+            })
+            .finally(() => setLoading(false));
+        }
+
+        function listImages() {
+            if (!serverConnected) {
+                return;
+            }
+            
+            fetch('/images')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    updateImageTable(data.images || data);
+                })
+                .catch(error => {
+                    displayResult({error: 'Lỗi liệt kê images: ' + error.message});
+                });
+        }
+
+        function updateImageTable(images) {
+            const tbody = document.getElementById('imageTableBody');
+            if (!images || images.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Không có image nào</td></tr>';
+                return;
+            }
+            
+            const imageArray = Array.isArray(images) ? images : [images];
+            
+            // Debug log to see the actual structure
+            console.log('Images data:', imageArray);
+            
+            tbody.innerHTML = imageArray.map(img => {
+                console.log('Processing image:', img); // Debug each image
+                
+                const repoTags = img.RepoTags || ['<none>:<none>'];
+                const firstTag = repoTags[0];
+                const [repository, tag] = firstTag.split(':');
+                
+                // Try multiple ways to get the image ID
+                let imageId = 'N/A';
+                if (img.ID) {
+                    imageId = img.ID.replace('sha256:', '').substring(0, 12);
+                } else if (img.Id) {
+                    imageId = img.Id.replace('sha256:', '').substring(0, 12);
+                } else if (img.id) {
+                    imageId = img.id.replace('sha256:', '').substring(0, 12);
+                }
+                
+                console.log('Image ID extracted:', imageId); // Debug the ID
+                
+                const fullImageName = firstTag !== '<none>:<none>' ? firstTag : imageId;
+                
+                return `
+                    <tr>
+                        <td>
+                            <span class="font-monospace small">${imageId}</span>
+                            <button class="btn btn-xs btn-outline-secondary ms-1" onclick="copyToClipboard('${imageId}')" title="Copy ID">
+                                📋
+                            </button>
+                        </td>
+                        <td>${repository || 'N/A'}</td>
+                        <td>${tag || 'N/A'}</td>
+                        <td>${img.Size ? (img.Size / 1024 / 1024).toFixed(2) + ' MB' : 'N/A'}</td>
+                        <td>${img.Created ? new Date(img.Created * 1000).toLocaleDateString() : 'N/A'}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-danger" onclick="quickRemoveImage('${fullImageName}')" title="Xóa image">
+                                    🗑️
+                                </button>
+                                <button class="btn btn-info" onclick="useImageForContainer('${fullImageName}')" title="Dùng để tạo container">
+                                    🐳
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Container action functions
+        let currentContainerData = {};
+
+        function showContainerActions(containerName, containerId, containerState) {
+            currentContainerData = {
+                name: containerName,
+                id: containerId,
+                state: containerState
+            };
+            
+            document.getElementById('actionContainerInfo').textContent = `${containerName} (${containerId})`;
+            
+            // Update button states based on container status
+            const isRunning = containerState === 'running';
+            document.getElementById('startContainerBtn').style.display = isRunning ? 'none' : 'block';
+            document.getElementById('stopContainerBtn').style.display = isRunning ? 'block' : 'none';
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('containerActionModal'));
+            modal.show();
+        }
+
+        function performContainerAction(action) {
+            const container = currentContainerData;
+            
+            if (action === 'remove') {
+                if (!confirm(`Bạn có chắc chắn muốn XÓA container "${container.name}"?\n\n⚠️ Thao tác này không thể hoàn tác!`)) {
+                    return;
+                }
+            }
+            
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('containerActionModal'));
+            modal.hide();
+            
+            // Perform action
+            setLoading(true);
+            
+            let url = `/${action}/${container.name}`;
+            
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    displayResult(data);
+                    checkServerConnection(); // Refresh list
+                })
+                .catch(error => {
+                    displayResult({error: `Lỗi ${action} container: ` + error.message});
+                })
+                .finally(() => setLoading(false));
+        }
+
+        function showCreateContainerModal() {
+            // Clear form
+            document.getElementById('modalImageName').value = '';
+            document.getElementById('modalContainerName').value = '';
+            document.getElementById('modalPortMapping').value = '';
+            
+            // Make image field editable
+            document.getElementById('modalImageName').readOnly = false;
+            
+            // Update modal title
+            document.getElementById('containerModalLabel').textContent = 'Tạo Container mới';
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('containerModal'));
+            modal.show();
+            
+            // Focus on image field
+            setTimeout(() => {
+                document.getElementById('modalImageName').focus();
+            }, 500);
+        }
+
+        function useImageForContainer(imageName) {
+            document.getElementById('modalImageName').value = imageName;
+            document.getElementById('modalContainerName').value = '';
+            document.getElementById('modalPortMapping').value = '';
+            
+            // Make image field readonly when coming from image list
+            document.getElementById('modalImageName').readOnly = true;
+            
+            // Generate suggested container name
+            const timestamp = new Date().getTime();
+            const shortName = imageName.split(':')[0].split('/').pop();
+            document.getElementById('modalContainerName').value = `${shortName}-${timestamp}`;
+            
+            // Update modal title
+            document.getElementById('containerModalLabel').textContent = 'Tạo Container từ Image';
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('containerModal'));
+            modal.show();
+            
+            // Focus on container name field
+            setTimeout(() => {
+                document.getElementById('modalContainerName').focus();
+                document.getElementById('modalContainerName').select();
+            }, 500);
+        }
+
+        function createContainerFromModal() {
+            const imageName = document.getElementById('modalImageName').value.trim();
+            const containerName = document.getElementById('modalContainerName').value.trim();
+            const portMapping = document.getElementById('modalPortMapping').value.trim();
+            
+            if (!imageName) {
+                displayResult({error: 'Vui lòng nhập tên image'});
+                return;
+            }
+            
+            if (!containerName) {
+                displayResult({error: 'Vui lòng nhập tên container'});
+                return;
+            }
+            
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('containerModal'));
+            modal.hide();
+            
+            // Create container
+            setLoading(true);
+            
+            const data = {
+                name: containerName,
+                image: imageName,
+                port: portMapping
+            };
+            
+            fetch('/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                displayResult(data);
+                checkServerConnection(); // Refresh container list
+            })
+            .catch(error => {
+                displayResult({error: 'Lỗi tạo container: ' + error.message});
+            })
+            .finally(() => setLoading(false));
+        }
+
+        // Display result in the result area
+        function displayResult(data) {
+            const resultDiv = document.getElementById('result');
+            
+            if (data.error) {
+                let errorHtml = `<div class="alert alert-danger">
+                    <h6 class="alert-heading">❌ Lỗi!</h6>
+                    <p><strong>${data.error}</strong></p>`;
+                
+                // Add details if available
+                if (data.details) {
+                    errorHtml += `<hr><small><strong>Chi tiết:</strong> ${data.details}</small>`;
+                }
+                
+                // Add suggestion if available
+                if (data.suggestion) {
+                    errorHtml += `<hr><div class="mt-2">
+                        <strong>💡 Gợi ý khắc phục:</strong><br>
+                        <code>${data.suggestion}</code>
+                    </div>`;
+                }
+                
+                // Add additional info for conflicts
+                if (data.requested_port) {
+                    errorHtml += `<hr><div class="mt-2">
+                        <strong>📋 Thông tin:</strong><br>
+                        • Port yêu cầu: <code>${data.requested_port}</code><br>
+                        • Tình trạng: Port này đã được sử dụng
+                    </div>`;
+                }
+                
+                // Add available options if provided
+                if (data.available_images && data.available_images.length > 0) {
+                    errorHtml += `<hr><div class="mt-2">
+                        <strong>📋 Images có sẵn:</strong><br>
+                        <small>${data.available_images.slice(0, 5).join(', ')}${data.available_images.length > 5 ? '...' : ''}</small>
+                    </div>`;
+                }
+                
+                // Add container info if available
+                if (data.container_id) {
+                    errorHtml += `<hr><div class="mt-2">
+                        <strong>⚠️ Lưu ý:</strong><br>
+                        Container đã được tạo nhưng không thể khởi động<br>
+                        Container ID: <code>${data.container_id}</code><br>
+                        ${data.note || ''}
+                    </div>`;
+                }
+                
+                errorHtml += `</div>`;
+                resultDiv.innerHTML = errorHtml;
+                
+            } else if (data.message) {
+                let successHtml = `<div class="alert alert-success">
+                    <h6 class="alert-heading">✅ Thành công!</h6>
+                    <p>${data.message}</p>`;
+                
+                // Add detailed info for successful operations
+                if (data.name || data.id || data.port || data.image) {
+                    successHtml += `<hr><div class="mt-2">
+                        <strong>📋 Thông tin chi tiết:</strong><br>`;
+                    
+                    if (data.name) successHtml += `• Tên: <code>${data.name}</code><br>`;
+                    if (data.id) successHtml += `• ID: <code>${data.id.substring(0, 12)}</code><br>`;
+                    if (data.image) successHtml += `• Image: <code>${data.image}</code><br>`;
+                    if (data.port && data.port !== 'none') successHtml += `• Port: <code>${data.port}</code><br>`;
+                    
+                    successHtml += `</div>`;
+                }
+                
+                // Add note about port changes
+                if (data.note && data.original_port) {
+                    successHtml += `<hr><div class="mt-2 alert alert-warning mb-0">
+                        <strong>⚠️ Thông báo:</strong><br>
+                        ${data.note}<br>
+                        Port gốc: <code>${data.original_port}</code> → Port thực tế: <code>${data.port}</code>
+                    </div>`;
+                }
+                
+                successHtml += `</div>`;
+                resultDiv.innerHTML = successHtml;
+                
+            } else {
+                // Fallback for other data types
+                resultDiv.innerHTML = `<div class="alert alert-info">
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                </div>`;
+            }
+            
+            // Auto scroll to result
+            resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        
+        function checkServerConnection() {
+            fetch('/stats')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    updateServerStatus(true);
+                    return response.json();
+                })
+                .then(data => {
+                    displayResult({message: 'Kết nối server thành công!'});
+                    
+                    // Get containers and images from /status endpoint
+                    fetch('/status')
+                        .then(response => response.json())
+                        .then(statusData => {
+                            const containers = statusData.containers || statusData;
+                            updateContainerTable(containers);
+                            
+                            // Load images
+                            fetch('/images')
+                                .then(response => response.json())
+                                .then(imageData => {
+                                    const images = imageData.images || imageData;
+                                    updateImageTable(images);
+                                    updateDashboardStats(containers, images, data.system);
+                                })
+                                .catch(error => {
+                                    console.error('Error loading images:', error);
+                                    updateDashboardStats(containers, [], data.system);
+                                });
+                        })
+                        .catch(error => {
+                            console.error('Error loading containers:', error);
+                            updateDashboardStats([], [], data.system);
+                        });
+                })
+                .catch(error => {
+                    updateServerStatus(false, error.message);
+                    updateDashboardStats([], [], null);
+                    displayResult({
+                        error: `Lỗi kết nối server: ${error.message}
+                        
+Hướng dẫn khắc phục:
+1. Kiểm tra Docker daemon có đang chạy không: sudo systemctl start docker
+2. Kiểm tra user có quyền truy cập Docker không: sudo usermod -aG docker $USER
+3. Kiểm tra server Go có đang chạy không
+4. Đảm bảo server chạy trên cổng 8080`
+                    });
+                });
+        }
+
+        // Load container list on page load with retry mechanism
+        window.onload = function() {
+            displayResult({message: 'Đang kiểm tra kết nối server...'});
+            initializeCharts();
+            checkServerConnection();
+            
+            // Retry connection every 5 seconds if failed
+            setInterval(() => {
+                if (!serverConnected) {
+                    checkServerConnection();
+                } else {
+                    // Auto refresh dashboard every 30 seconds when connected
+                    checkServerConnection();
+                }
+            }, 30000);
+        };
+        
+        function updateContainerTable(containers) {
+            const tbody = document.getElementById('containerTableBody');
+            if (!containers || containers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Không có container nào</td></tr>';
+                return;
+            }
+            
+            const containerArray = Array.isArray(containers) ? containers : [containers];
+            console.log('Containers data:', containerArray);
+            
+            tbody.innerHTML = containerArray.map(container => {
+                console.log('Processing container:', container);
+                
+                let containerId = 'N/A';
+                if (container.ID) {
+                    containerId = container.ID.substring(0, 12);
+                } else if (container.Id) {
+                    containerId = container.Id.substring(0, 12);
+                } else if (container.id) {
+                    containerId = container.id.substring(0, 12);
+                }
+                
+                const containerName = container.Names ? container.Names[0]?.replace('/', '') : container.name || 'N/A';
+                const isRunning = container.State === 'running' || container.status === 'running';
+                const containerState = container.State || container.status || 'unknown';
+                
+                let portDisplay = 'N/A';
+                if (container.Ports && container.Ports.length > 0) {
+                    portDisplay = container.Ports.map(p => {
+                        if (p.PublicPort && p.PrivatePort) {
+                            return `${p.PublicPort}:${p.PrivatePort}`;
+                        } else if (p.PrivatePort) {
+                            return `${p.PrivatePort}`;
+                        }
+                        return '';
+                    }).filter(p => p).join(', ') || 'N/A';
+                } else if (container.ports) {
+                    portDisplay = container.ports;
+                }
+                
+                return `
+                    <tr>
+                        <td>
+                            <input type="checkbox" class="form-check-input me-2 container-checkbox" value="${containerName}" data-container-id="${containerId}" data-state="${containerState}" onchange="updateBulkSelection()">
+                            <span class="font-monospace small">${containerId}</span>
+                            <button class="btn btn-xs btn-outline-secondary ms-1" onclick="copyToClipboard('${containerId}')" title="Copy ID">
+                                📋
+                            </button>
+                        </td>
+                        <td>${containerName}</td>
+                        <td>${container.Image || container.image || 'N/A'}</td>
+                        <td><span class="badge ${isRunning ? 'bg-success' : 'bg-secondary'}">${containerState}</span></td>
+                        <td>${portDisplay}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-primary" onclick="showContainerActions('${containerName}', '${containerId}', '${containerState}')" title="Thao tác">
+                                    ⚙️
+                                </button>
+                                <button class="btn btn-info" onclick="showContainerLogs('${containerId}', '${containerName}')" title="Logs">
+                                    📋
+                                </button>
+                                ${isRunning ? `<button class="btn btn-success" onclick="showContainerTerminal('${containerId}', '${containerName}')" title="Terminal">💻</button>` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function quickRemoveImage(imageName) {
+            if (confirm(`Bạn có chắc chắn muốn xóa image "${imageName}"? Thao tác này không thể hoàn tác!`)) {
+                setLoading(true);
+                fetch(`/images/${encodeURIComponent(imageName)}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    displayResult(data);
+                    listImages();
+                })
+                .catch(error => {
+                    displayResult({error: 'Lỗi xóa image: ' + error.message});
+                })
+                .finally(() => setLoading(false));
+            }
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                displayResult({message: `Đã copy "${text}" vào clipboard`});
+            }).catch(err => {
+                displayResult({error: 'Không thể copy: ' + err.message});
+            });
+        }
+
+        function showBulkOperations() {
+            // Update list when modal opens
+            updateBulkSelection();
+            const modal = new bootstrap.Modal(document.getElementById('bulkModal'));
+            modal.show();
+        }
+
+        function updateBulkContainerList() {
+            const checkboxes = document.querySelectorAll('.container-checkbox');
+            const selectedContainers = Array.from(checkboxes)
+                .filter(cb => cb.checked)
+                .map(cb => ({
+                    name: cb.value,
+                    id: cb.getAttribute('data-container-id'),
+                    state: cb.getAttribute('data-state')
+                }));
+            
+            console.log('Selected containers in updateBulkContainerList:', selectedContainers);
+            
+            const listDiv = document.getElementById('bulkContainerList');
+            if (selectedContainers.length === 0) {
+                listDiv.innerHTML = '<p class="text-muted">Chưa chọn container nào. Hãy chọn container từ bảng trên hoặc dùng Quick Selection.</p>';
+            } else {
+                listDiv.innerHTML = selectedContainers.map(container => 
+                    `<div class="badge ${container.state === 'running' ? 'bg-success' : 'bg-secondary'} me-2 mb-2">
+                        ${container.name} (${container.state})
+                    </div>`
+                ).join('');
+            }
+        }
+
+        function executeBulkOperation() {
+            const action = document.getElementById('bulkAction').value;
+            const checkboxes = document.querySelectorAll('.container-checkbox');
+            const selectedContainers = Array.from(checkboxes)
+                .filter(cb => cb.checked)
+                .map(cb => cb.value);
+
+            console.log('Executing bulk operation:', action, 'on containers:', selectedContainers);
+
+            if (selectedContainers.length === 0) {
+                displayResult({error: 'Vui lòng chọn ít nhất một container để thực hiện bulk operation'});
+                return;
+            }
+
+            // Enhanced confirmation for dangerous operations
+            if (action === 'remove') {
+                if (!confirm(`⚠️ CẢNH BÁO: Bạn có chắc chắn muốn XÓA ${selectedContainers.length} containers?\n\n• ${selectedContainers.join('\n• ')}\n\nThao tác này KHÔNG THỂ HOÀN TÁC!`)) {
+                    return;
+                }
+            } else if (action === 'stop') {
+                if (!confirm(`Bạn có chắc chắn muốn DỪNG ${selectedContainers.length} containers?\n\n• ${selectedContainers.join('\n• ')}`)) {
+                    return;
+                }
+            }
+
+            setLoading(true);
+            displayResult({message: `🔄 Đang thực hiện ${action} cho ${selectedContainers.length} containers...`});
+            
+            fetch(`/bulk/${action}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ containers: selectedContainers })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Bulk operation response:', data);
+                
+                let resultMessage = `✅ Bulk ${action} hoàn thành!\n\n📊 Kết quả:\n• Thành công: ${data.summary.success}\n• Lỗi: ${data.summary.errors}\n• Tổng: ${data.summary.total}`;
+                
+                if (data.summary.errors > 0) {
+                    resultMessage += '\n\n❌ Chi tiết lỗi:';
+                    Object.entries(data.results).forEach(([containerId, result]) => {
+                        if (result.status === 'error') {
+                            resultMessage += `\n• ${containerId}: ${result.message}`;
+                        }
+                    });
+                }
+                
+                if (data.summary.success > 0) {
+                    resultMessage += '\n\n✅ Thành công:';
+                    Object.entries(data.results).forEach(([containerId, result]) => {
+                        if (result.status === 'success') {
+                            resultMessage += `\n• ${containerId}: Completed`;
+                        }
+                    });
+                }
+                
+                displayResult({
+                    message: resultMessage,
+                    details: `Bulk ${action} completed - ${data.summary.success}/${data.summary.total} succeeded`
+                });
+                
+                // Close modal and refresh
+                const modal = bootstrap.Modal.getInstance(document.getElementById('bulkModal'));
+                if (modal) modal.hide();
+                
+                // Uncheck all checkboxes
+                document.querySelectorAll('.container-checkbox').forEach(cb => cb.checked = false);
+                updateBulkSelection();
+                
+                // Refresh container list after a short delay
+                setTimeout(() => {
+                    checkServerConnection();
+                }, 1000);
+            })
+            .catch(error => {
+                console.error('Bulk operation error:', error);
+                displayResult({
+                    error: `❌ Bulk operation thất bại: ${error.message}`,
+                    details: 'Kiểm tra console để biết thêm chi tiết'
+                });
+            })
+            .finally(() => setLoading(false));
+        }
+
+        function showContainerLogs(containerId, containerName) {
+            currentContainerForLogs = containerId;
+            document.querySelector('#logsModal .modal-title').textContent = `📋 Logs: ${containerName}`;
+            
+            const modal = new bootstrap.Modal(document.getElementById('logsModal'));
+            modal.show();
+            
+            refreshLogs();
+        }
+
+        function refreshLogs() {
+            if (!currentContainerForLogs) return;
+            
+            const tailLines = document.getElementById('logTailLines').value;
+            const logsDiv = document.getElementById('containerLogs');
+            logsDiv.textContent = 'Loading logs...';
+            
+            fetch(`/logs/${currentContainerForLogs}?tail=${tailLines}`)
+                .then(response => response.json())
+                .then(data => {
+                    logsDiv.textContent = data.logs || 'No logs available';
+                    logsDiv.scrollTop = logsDiv.scrollHeight;
+                })
+                .catch(error => {
+                    logsDiv.textContent = 'Error loading logs: ' + error.message;
+                });
+        }
+
+        function showContainerTerminal(containerId, containerName) {
+            currentContainerForTerminal = containerId;
+            document.querySelector('#terminalModal .modal-title').textContent = `💻 Terminal: ${containerName}`;
+            
+            const modal = new bootstrap.Modal(document.getElementById('terminalModal'));
+            modal.show();
+            
+            document.getElementById('terminalOutput').textContent = `Connected to ${containerName}\n$ `;
+        }
+
+        function executeCommand() {
+            const command = document.getElementById('terminalCommand').value.trim();
+            if (!command || !currentContainerForTerminal) return;
+            
+            const outputDiv = document.getElementById('terminalOutput');
+            outputDiv.textContent += `${command}\n`;
+            
+            fetch(`/exec/${currentContainerForTerminal}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ command: command })
+            })
+            .then(response => response.json())
+            .then(data => {
+                outputDiv.textContent += data.output + '\n$ ';
+                outputDiv.scrollTop = outputDiv.scrollHeight;
+                document.getElementById('terminalCommand').value = '';
+            })
+            .catch(error => {
+                outputDiv.textContent += `Error: ${error.message}\n$ `;
+                outputDiv.scrollTop = outputDiv.scrollHeight;
+            });
+        }
+
+        function handleTerminalEnter(event) {
+            if (event.key === 'Enter') {
+                executeCommand();
+            }
+        }
+
+        function showSystemCleanup() {
+            if (confirm('This will remove unused containers, networks, images, and build cache. Continue?')) {
+                setLoading(true);
+                
+                fetch('/cleanup', { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        displayResult({
+                            message: 'System cleanup completed successfully!',
+                            details: data.output
+                        });
+                        checkServerConnection();
+                    })
+                    .catch(error => {
+                        displayResult({error: 'Cleanup failed: ' + error.message});
+                    })
+                    .finally(() => setLoading(false));
+            }
+        }
+
+        function showNetworkManager() {
+            fetch('/networks')
+                .then(response => response.json())
+                .then(data => {
+                    const networks = data.map(net => `${net.Name} (${net.Driver})`).join(', ');
+                    displayResult({
+                        message: `Docker Networks: ${networks}`,
+                        details: `Found ${data.length} networks`
+                    });
+                })
+                .catch(error => {
+                    displayResult({error: 'Error loading networks: ' + error.message});
+                });
+        }
+
+        function showVolumeManager() {
+            fetch('/volumes')
+                .then(response => response.json())
+                .then(data => {
+                    const volumes = data.Volumes ? data.Volumes.map(vol => vol.Name).join(', ') : 'No volumes';
+                    displayResult({
+                        message: `Docker Volumes: ${volumes}`,
+                        details: `Found ${data.Volumes ? data.Volumes.length : 0} volumes`
+                    });
+                })
+                .catch(error => {
+                    displayResult({error: 'Error loading volumes: ' + error.message});
+                });
+        }
+
+        // Add missing Bulk Operations functions
+        function updateBulkSelection() {
+            const checkboxes = document.querySelectorAll('.container-checkbox');
+            const selectedContainers = Array.from(checkboxes)
+                .filter(cb => cb.checked)
+                .map(cb => ({
+                    name: cb.value,
+                    id: cb.getAttribute('data-container-id'),
+                    state: cb.getAttribute('data-state')
+                }));
+            
+            console.log('Selected containers in updateBulkSelection:', selectedContainers);
+            
+            const listDiv = document.getElementById('bulkContainerList');
+            if (selectedContainers.length === 0) {
+                listDiv.innerHTML = '<p class="text-muted">Chưa chọn container nào. Hãy chọn container từ bảng trên hoặc dùng Quick Selection.</p>';
+            } else {
+                listDiv.innerHTML = selectedContainers.map(container => 
+                    `<div class="badge ${container.state === 'running' ? 'bg-success' : 'bg-secondary'} me-2 mb-2">
+                        ${container.name} (${container.state})
+                    </div>`
+                ).join('');
+            }
+        }
+
+        function selectAllContainers() {
+            const checkboxes = document.querySelectorAll('.container-checkbox');
+            checkboxes.forEach(cb => cb.checked = true);
+            updateBulkSelection();
+        }
+
+        function selectNoneContainers() {
+            const checkboxes = document.querySelectorAll('.container-checkbox');
+            checkboxes.forEach(cb => cb.checked = false);
+            updateBulkSelection();
+        }
+
+        function selectRunningContainers() {
+            const checkboxes = document.querySelectorAll('.container-checkbox');
+            checkboxes.forEach(cb => {
+                const state = cb.getAttribute('data-state');
+                cb.checked = (state === 'running');
+            });
+            updateBulkSelection();
+        }
+
+        function selectStoppedContainers() {
+            const checkboxes = document.querySelectorAll('.container-checkbox');
+            console.log('All checkboxes found:', checkboxes.length);
+            
+            checkboxes.forEach(cb => {
+                const state = cb.getAttribute('data-state');
+                console.log(`Container ${cb.value} has state: ${state}`);
+                
+                // Check for stopped states: exited, created, dead, restarting, paused
+                const stoppedStates = ['exited', 'created', 'dead', 'restarting', 'paused'];
+                cb.checked = stoppedStates.includes(state);
+                
+                if (cb.checked) {
+                    console.log(`Selected stopped container: ${cb.value} (${state})`); 
+                }
+            });
+            updateBulkSelection();
+        }
+    </script>
+</body>
+</html>
