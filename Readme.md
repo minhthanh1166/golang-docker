@@ -1,81 +1,96 @@
 # Docker Container Management System
 
-## Tổng quan dự án (Project Overview)
-Hệ thống quản lý Docker Container được phát triển bằng Golang, cung cấp REST API và giao diện web để quản lý các container, image, network và volume trong Docker một cách đơn giản và hiệu quả.
+## Project Overview
+The **Docker Container Management System** is developed in Golang, offering both a REST API and a web interface for managing Docker containers, images, networks, and volumes with ease and efficiency.
 
-## Tính năng phần mềm (Software Features)
+---
 
-### Quản lý Container
-- **Tạo container**: Tự động tạo container từ image với cấu hình tùy chỉnh
-- **Khởi động container**: Bật container đã tạo
-- **Dừng container**: Tạm dừng container đang chạy
-- **Xóa container**: Loại bỏ container khỏi hệ thống
-- **Ánh xạ cổng thông minh**: Tự động chọn cổng trống nếu cổng yêu cầu đã được sử dụng
-- **Xem logs**: Hiển thị logs của container
-- **Thực thi lệnh**: Chạy lệnh bên trong container đang hoạt động
-- **Thao tác hàng loạt**: Thực hiện hành động trên nhiều container cùng lúc
+## 🧩 Features
 
-### Quản lý Image
-- **Liệt kê images**: Hiển thị tất cả Docker images hiện có trên hệ thống
-- **Tìm kiếm images**: Tìm kiếm images từ Docker Hub
-- **Tải image**: Tải xuống images từ registry
-- **Xóa image**: Loại bỏ image không cần thiết
+### 🐳 Container Management
+- **Create containers**: Automatically create containers from images with custom settings  
+- **Start containers**: Launch existing containers  
+- **Stop containers**: Pause running containers  
+- **Remove containers**: Delete containers from the system  
+- **Smart port mapping**: Automatically select available ports if requested ones are in use  
+- **View logs**: Display logs of containers  
+- **Execute commands**: Run shell commands inside running containers  
+- **Bulk operations**: Perform actions (start, stop, remove) on multiple containers at once  
 
-### Giám sát và Monitoring
-- **Thống kê tài nguyên**: Theo dõi CPU, RAM và ổ đĩa theo thời gian thực
-- **Giám sát container**: Hiển thị trạng thái và tài nguyên của từng container
-- **Dashboard tổng quan**: Bảng điều khiển trực quan hiển thị tình trạng hệ thống
-- **Cảnh báo**: Thông báo khi tài nguyên vượt ngưỡng hoặc container gặp sự cố
-- **Thống kê lịch sử**: Lưu trữ và hiển thị dữ liệu hiệu suất theo thời gian
-- **Báo cáo sử dụng**: Tạo báo cáo về việc sử dụng tài nguyên theo thời gian
+### 📦 Image Management
+- **List images**: Show all Docker images on the system  
+- **Search images**: Search for Docker images on Docker Hub  
+- **Pull images**: Download images from a Docker registry  
+- **Delete images**: Remove unwanted or unused images  
 
-### Quản lý hệ thống
-- **Thống kê hệ thống**: Hiển thị thông tin về CPU, bộ nhớ, ổ đĩa
-- **Dọn dẹp hệ thống**: Xóa container, images không sử dụng để giải phóng không gian
-- **Quản lý network**: Xem và quản lý các mạng Docker
-- **Quản lý volume**: Xem và quản lý các volume lưu trữ
+### 📊 Monitoring & Observability
+- **Real-time stats**: Monitor CPU, memory, and disk usage live  
+- **Container-level metrics**: View status and resource consumption for each container  
+- **Dashboard**: Visual overview of system health and activity  
+- **Alerts**: Notify when containers crash or resources exceed thresholds  
+- **Historical data**: Track and visualize usage trends over time  
+- **Usage reports**: Generate reports for performance and resource usage  
 
-### Xử lý thông minh
-- **Xử lý xung đột port**: Tự động phát hiện và đề xuất giải pháp khi có xung đột port
-- **Báo lỗi chi tiết**: Cung cấp thông báo lỗi rõ ràng với hướng dẫn khắc phục
-- **Tự động đánh tên**: Tự động tạo tên duy nhất cho container nếu không được cung cấp
+### ⚙️ System Management
+- **System stats**: Display information about CPU, memory, and disk  
+- **System cleanup**: Remove unused containers, images to free up space  
+- **Network management**: View and manage Docker networks  
+- **Volume management**: View and manage Docker volumes  
 
-## API Endpoints
+### 🤖 Smart Handling
+- **Port conflict resolution**: Detect and suggest solutions for port conflicts  
+- **Detailed error feedback**: Display clear error messages with fix suggestions  
+- **Auto-naming**: Automatically generate unique names for containers if none is provided  
 
-### Container Management
-- `POST /create`: Tạo và khởi động container mới
-- `GET /status`: Liệt kê tất cả containers
-- `GET /stop/:id`: Dừng container theo ID hoặc tên
-- `GET /start/:id`: Khởi động container theo ID hoặc tên
-- `GET /remove/:id`: Xóa container theo ID hoặc tên
-- `GET /logs/:id`: Xem logs của container
-- `POST /exec/:id`: Thực thi lệnh trong container
-- `POST /bulk/:action`: Thực hiện hành động hàng loạt (start, stop, remove, restart)
+---
 
-### Image Management
-- `GET /images`: Liệt kê tất cả Docker images
-- `POST /images/pull`: Tải Docker image từ registry
-- `DELETE /images/:id`: Xóa Docker image theo ID hoặc tên
-- `GET /images/search/:term`: Tìm kiếm image trên Docker Hub
+## 📡 API Endpoints
 
-### System Management
-- `GET /stats`: Thống kê hệ thống (container, image, CPU, RAM, ổ đĩa)
-- `POST /cleanup`: Dọn dẹp hệ thống
-- `GET /networks`: Liệt kê Docker networks
-- `GET /volumes`: Liệt kê Docker volumes
+### 🔧 Container Management
+- `POST /create` – Create and start a new container  
+- `GET /status` – List all containers  
+- `GET /stop/:id` – Stop a container by ID or name  
+- `GET /start/:id` – Start a container by ID or name  
+- `GET /remove/:id` – Remove a container by ID or name  
+- `GET /logs/:id` – View logs of a container  
+- `POST /exec/:id` – Execute command inside a container  
+- `POST /bulk/:action` – Perform bulk operations (`start`, `stop`, `remove`, `restart`)  
 
-## Yêu cầu hệ thống (Requirements)
-- Go 1.16 hoặc cao hơn
-- Docker Engine
-- Quyền truy cập vào Docker daemon socket
+### 📁 Image Management
+- `GET /images` – List all Docker images  
+- `POST /images/pull` – Pull image from registry  
+- `DELETE /images/:id` – Delete image by ID or name  
+- `GET /images/search/:term` – Search for image on Docker Hub  
 
+### 🧠 System Management
+- `GET /stats` – System statistics (containers, images, CPU, memory, disk)  
+- `POST /cleanup` – Clean up unused resources  
+- `GET /networks` – List Docker networks  
+- `GET /volumes` – List Docker volumes  
 
-## Sử dụng (Usage)
-1. Truy cập giao diện web tại http://localhost:8081
-2. Sử dụng các API endpoints để quản lý Docker qua REST API
+---
 
-## Đóng góp (Contributing)
-Mọi đóng góp đều được hoan nghênh. Vui lòng tạo pull request hoặc issue để đóng góp vào dự án.
+## ⚙️ Requirements
+- Golang 1.16 or higher  
+- Docker Engine  
+- Access to Docker daemon socket (e.g., `/var/run/docker.sock`)
 
-## Giấy phép (License)
+---
+
+## 🚀 Usage
+
+1. Launch the application and access the web UI at:  
+   **http://localhost:8081**
+
+2. Use REST API endpoints (e.g. via Postman or curl) to control Docker containers and resources.
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please submit a pull request or open an issue to participate in development or suggest improvements.
+
+---
+
+## 📄 License
 Copyright (c) 2025 Bùi Minh Thành. All rights reserved.
